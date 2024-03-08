@@ -20,7 +20,7 @@ def usr_info(message):
     global check
     global phone
     if message.text=="Order a Pizza":
-        bot.reply_to(message,"Please enter your first name :") #Checking user info
+        bot.reply_to(message,"Please enter your first name :")
     else:
         for i in range(len(user_info["fname"])):
             if(user_info["fname"][i]==message.text and check!="edit_fname_pressed" and check !="edit_sname_pressed" and check !="edit_num_pressed"):
@@ -98,16 +98,19 @@ def usr_info(message):
                 elif(check=="edit_num_pressed"):
                     for i in range(len(user_info["phonenum"])):
                         if(phone==user_info["phonenum"][i]):
-                            user_info["phonenum"][i]=message.text
-                            phone=user_info["phonenum"][i]
-                            markup=telebot.types.InlineKeyboardMarkup()
-                            markup.row_width = 2
-                            edit_user_info=telebot.types.InlineKeyboardButton("Edit",callback_data="edit")
-                            order=telebot.types.InlineKeyboardButton("Order",callback_data="order")
-                            markup.add(edit_user_info,order)
-                            bot.send_message(message.from_user.id,f"First name : {user_info['fname'][i]}\nLast name : {user_info['sname'][i]}\nPhone Number : {user_info['phonenum'][i]}",reply_markup=markup)
-                            check=None
-                            break
+                            if(message.text[0:5]=="+998"):
+                                user_info["phonenum"][i]=message.text
+                                phone=user_info["phonenum"][i]
+                                markup=telebot.types.InlineKeyboardMarkup()
+                                markup.row_width = 2
+                                edit_user_info=telebot.types.InlineKeyboardButton("Edit",callback_data="edit")
+                                order=telebot.types.InlineKeyboardButton("Order",callback_data="order")
+                                markup.add(edit_user_info,order)
+                                bot.send_message(message.from_user.id,f"First name : {user_info['fname'][i]}\nLast name : {user_info['sname'][i]}\nPhone Number : {user_info['phonenum'][i]}",reply_markup=markup)
+                                check=None
+                                break
+                elif(message.text[0:5]!='+998'):
+                    bot.send_message(message.from_user.id,"You have entered something wrong. Please check everything and retry. Have you entered the phone number correctly? Did you type it with +")
 @bot.callback_query_handler(func=lambda call : True)
 def edit_callback(call):
     global fn
@@ -122,7 +125,8 @@ def edit_callback(call):
         edit_fname=telebot.types.InlineKeyboardButton("Edit First Name",callback_data="edit_fname")
         edit_sname=telebot.types.InlineKeyboardButton("Edit Last Name",callback_data="edit_sname")
         edit_num=telebot.types.InlineKeyboardButton("Edit Phone Number",callback_data="edit_num")
-        markup.add(edit_fname,edit_sname,edit_num)
+        delete=telebot.types.InlineKeyboardButton("Delete Account",callback_data="delete")
+        markup.add(edit_fname,edit_sname,edit_num,delete)
         bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.message_id,text=f"First name : {fn}\nLast name : {sn}\nPhone Number : {phone}",reply_markup=markup)
     elif call.data=="order":
        markup=telebot.types.InlineKeyboardMarkup()
@@ -170,4 +174,11 @@ def edit_callback(call):
     elif call.data=="small":
         bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.message_id,text="Please send your location")
         print(" Small")
+    elif call.data=="delete":
+        for i in range(len(user_info["fname"])):
+            if(fn==user_info["fname"][i]):
+                user_info["fname"].pop(i)
+                user_info["sname"].pop(i)
+                user_info["phonenum"].pop(i)
+                bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.message_id,text="Your account has been deleted successfully")
 bot.infinity_polling()
